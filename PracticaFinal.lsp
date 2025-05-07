@@ -14,24 +14,43 @@
   (dotimes (i filas)
     (dotimes (j columnas)
       (progn
-        (move (+ xi (* j m)) (+ yi (* i m)))
+        (move (+ xi (* j m)) (+ yi (* (- filas 1 i) m)))
         (setf l (append l '(pared)))
-        (color 255 255 255)
+        (color 0 0 0)
         (cuadrado m))))
-        (setq aleatorio (random 625))
-        (entrada 1 l)
-        (guardar-laberinto l "laberinto.txt" columnas))
+  (setq *random-state* (make-random-state t))
+  (setq aleatorio 1)
+  (setf l (canvia aleatorio l 'entrada))
+  (guardar-laberinto l "laberinto.txt" columnas)
+  (setq fi (dividir aleatorio 25))
+  (setq co (resto aleatorio 25))
+  (move (+ xi (* co m)) (+ yi (* (- filas 1 fi) m)))
+  (color 0 255 0)
+  (cuadrado m)
+  (color 0 0 0))
+
+
+(defun calcularcuadraro (x)
+
+)
+
+(defun dividir (m n)
+(cond ((< m n) 0)
+(t (+ 1 (dividir (- m n) n)))))
+
+(defun resto (m n)
+(cond
+((< m n) m)
+(t (resto (- m n) n))
+)
+)
 
 (defun canvia (on l per)
     (cond 
-    ((= on 1) (setf l (cons per (cdr l))))
-    (t (setf l (cons (car l) (canvia (- on 1)(cdr l)per))))
+    ((= on 0) (cons per (cdr l)))
+    (t (cons (car l) (canvia (- on 1)(cdr l)per)))
     )
     )
-
-(defun entrada (aleatorio l)
-  (canvia aleatorio l '(entrada))
-)
 
 (defun guardar-laberinto (laberinto nom columnas)
   (let ((fp (open nom :direction :output)))
