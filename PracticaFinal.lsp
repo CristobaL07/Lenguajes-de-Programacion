@@ -23,7 +23,8 @@
         (guardar-laberinto l "laberinto.txt" columnas))
 
 (defun canvia (on l per)
-    (cond ((= on 1) (setf l (cons per (cdr l))))
+    (cond 
+    ((= on 1) (setf l (cons per (cdr l))))
     (t (setf l (cons (car l) (canvia (- on 1)(cdr l)per))))
     )
     )
