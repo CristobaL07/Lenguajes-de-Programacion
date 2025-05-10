@@ -25,7 +25,7 @@
   (setf laberinto (canvia aleatorioS laberinto 'sortida))
   (guardar-laberinto laberinto "laberinto.txt" columnas)
   (pintar laberinto filas columnas)
-  (jugar))
+  (jugar laberinto (encontrarentrada laberinto) (encontrarsalida laberinto) (encontrarentrada laberinto)))
 
 (defun pintar (laberinto filas columnas)
   (dotimes (i filas)
@@ -103,8 +103,74 @@
     ((eq (car laberinto) 'sortida) (write-char #\s fp) (escribir-laberinto fp (cdr laberinto)(- columnas 1))) 
     (t (write-char #\? fp) (escribir-laberinto fp (cdr laberinto)))))
 
-(defun jugar ()
-  )
+(defun jugar (laberinto entrada salida actual)
+(cond ((eq salida actual) (menu))
+  (t (let ((opcion (get-key)))
+    (cond
+      ((or (= opcion 65) (= opcion 97) (= opcion 331)) (jugar laberinto entrada salida (movimiento actual 0 laberinto))) ; izquierda
+      ((or (= opcion 68) (= opcion 100) (= opcion 333)) (jugar laberinto entrada salida (movimiento actual 1 laberinto))) ; derecha
+      ((or (= opcion 87) (= opcion 119) (= opcion 328)) (jugar laberinto entrada salida (movimiento actual 2 laberinto))) ; arriba
+      ((or (= opcion 83) (= opcion 115) (= opcion 336)) (jugar laberinto entrada salida (movimiento actual 3 laberinto))) ; abajo
+      ((= opcion 27) (menu)))))))
+
+(defun encontrarsalida (laberinto)
+ (cond
+  ((eq (car laberinto) 'sortida) 0)
+  (t (+ 1 (encontrarsalida (cdr laberinto))))
+))
+
+(defun encontrarentrada(laberinto)
+(cond
+  ((eq (car laberinto) 'entrada) 0)
+  (t (+ 1 (encontrarentrada (cdr laberinto))))
+)
+)
+
+(defun movimiento (actual direccion laberinto)
+  (cond ((eq direccion 0) (cond ((seguro laberinto (- actual 1)) (pintarjuego laberinto actual (- actual 1)) (- actual 1)) (t actual)))
+        ((eq direccion 1) (cond ((seguro laberinto (+ actual 1)) (pintarjuego laberinto actual (+ actual 1)) (+ actual 1)) (t actual)))
+        ((eq direccion 2) (cond ((seguro laberinto (- actual 25)) (pintarjuego laberinto actual (- actual 25)) (- actual 25)) (t actual)))
+        ((eq direccion 3) (cond ((seguro laberinto (+ actual 25)) (pintarjuego laberinto actual (+ actual 25)) (+ actual 25)) (t actual)))))
+
+(defun pintarjuego (laberinto anterior nueva)
+(setq i (dividir nueva 25))
+(setq j (resto nueva 25))
+(move (+ xi (* j m)) (+ yi (* (- 25 1 i) m)))
+(color 0 255 0)
+(cuadrado m)
+(setq i (dividir anterior 25))
+(setq j (resto anterior 25))
+(cond
+((eq (nth anterior laberinto) 'entrada))
+(t 
+(move (+ xi (* j m)) (+ yi (* (- 25 1 i) m)))
+(color 255 255 255)
+(cuadrado m)
+(color 0 0 0)
+)
+)
+)        
+
+(defun seguro (laberinto actual)
+(cond 
+((eq 0 actual)
+(cond
+((or (eq (car laberinto) 'sortida) (eq (car laberinto) 'cami)) t)
+(t nil)))
+(t (seguro (cdr laberinto) (- actual 1)))
+)
+)
+
+(defun llegeix (nom)
+ (let* ((fp (open nom))
+ (contingut (llegeix-intern fp)))
+ (close fp)
+ contingut))
+ 
+(defun llegeix-intern (fp)
+ (let ((c (read-char fp nil nil)))
+ (cond ((null c) '())
+ (t (cons c (llegeix-intern fp))))))
 
 (defun menu ()
   (cls)
