@@ -1,7 +1,14 @@
 (setq xi 250)
 (setq yi 10)
 (setq m 14)
+(setq movimientos 0)
 (setq laberinto '())
+(setq clasificacion '())
+(setq puntos '())
+(setq nombres '())
+(setq escritura '())
+(setq nombre "25x25_1.txt")
+(setq nombrejugador "sebas")
 (defparameter *random-state* (make-random-state t))
 
 (defun cuadrado (m)
@@ -25,6 +32,7 @@
   (setf laberinto (canvia aleatorioS laberinto 'sortida))
   (guardar-laberinto laberinto "laberinto.txt" columnas)
   (pintar laberinto filas columnas)
+  (princ "ESC. MENU\n")
   (jugar laberinto (encontrarentrada laberinto) (encontrarsalida laberinto) (encontrarentrada laberinto)))
 
 (defun pintar (laberinto filas columnas)
@@ -89,7 +97,7 @@
     )
 
 (defun guardar-laberinto (laberinto nom columnas)
-  (let ((fp (open nom :direction :output)))
+  (let ((fp (open nom :direction :output :if-exists :supersede)))
     (escribir-laberinto fp laberinto columnas)
     (close fp)))
 
@@ -104,7 +112,7 @@
     (t (write-char #\? fp) (escribir-laberinto fp (cdr laberinto)))))
 
 (defun jugar (laberinto entrada salida actual)
-(cond ((eq salida actual) (menu))
+(cond ((equal salida actual) (puntuacion))
   (t (let ((opcion (get-key)))
     (cond
       ((or (= opcion 65) (= opcion 97) (= opcion 331)) (jugar laberinto entrada salida (movimiento actual 0 laberinto))) ; izquierda
@@ -112,6 +120,89 @@
       ((or (= opcion 87) (= opcion 119) (= opcion 328)) (jugar laberinto entrada salida (movimiento actual 2 laberinto))) ; arriba
       ((or (= opcion 83) (= opcion 115) (= opcion 336)) (jugar laberinto entrada salida (movimiento actual 3 laberinto))) ; abajo
       ((= opcion 27) (menu)))))))
+
+(defun puntuacion ()
+(escriu "puntuacion.txt" (string-a-caracteres nombre))
+(escriu "puntuacion.txt" '(#\space))
+(escriu "puntuacion.txt" (numero-a-caracteres movimientos))
+(escriu "puntuacion.txt" '(#\space))
+(escriu "puntuacion.txt" (string-a-caracteres nombrejugador))
+(escriu "puntuacion.txt" '(#\newline))
+(leer "puntuacion.txt")
+(setq n (intern (string-upcase nombre)))
+(imprimir clasificacion)
+(setf puntos (ordena puntos))
+(princ puntos)
+;(menu)
+)
+
+(defun imprimir (clasificacion)
+(cond ((null clasificacion) nil)
+      ((equal (car clasificacion) n) (setq puntos (append puntos (list (cadr clasificacion)))) (setq nombres (append nombres (list (caddr clasificacion)))) (imprimir (cdddr clasificacion)))
+      (t (imprimir (cdddr clasificacion))))
+)
+
+(defun esborra (x l)
+(cond 
+((null l) nil)
+((equal x (car l)) (cdr l))
+(t (cons (car l) (esborra x (cdr l))))
+)
+)
+
+(defun minim (l)
+ (cond
+  ((null (cdr l)) (car l))
+ (t (let ((mincdr (minim (cdr l))))
+ (cond 
+ ((< (car l) mincdr) (car l)) 
+ (t mincdr))))
+ )
+ )
+ 
+(defun ordena (l)
+ (cond 
+ ((null l) nil)
+ (t (cons (minim l) (ordena (esborra (minim l) l))))
+ )
+ )
+
+(defun numero-a-caracteres (n)
+  (if (< n 10)
+      (list (code-char (+ n 48)))
+      (append (numero-a-caracteres (floor n 10))
+              (list (code-char (+ (mod n 10) 48)))))
+)
+
+(defun string-a-caracteres (str)
+  (cond ((zerop (length str)) nil   )
+      (t(cons (aref str 0) 
+            (string-a-caracteres (subseq str 1))))))
+
+(defun escriu (nom contingut)
+ (let ((fp (open nom :direction :output :if-exists :append :if-does-not-exist :create)))
+ (escriu-intern fp contingut)
+ (close fp)))
+
+
+(defun escriu-intern (fp contingut)
+ (cond ((null contingut)  nil)
+ (t (write-char (car contingut) fp)
+ (escriu-intern fp (cdr contingut)))))
+
+
+(defun leer (nom)
+ (let* ((fp (open nom))
+ (contingut (leer-interno fp)))
+ (close fp)
+ contingut))
+ 
+
+(defun leer-interno (fp)
+ (let ((c (read fp nil nil)))
+ (cond ((null c) '())
+ (t (setf clasificacion (append clasificacion (list c))) (leer-interno fp)))))
+
 
 (defun encontrarsalida (laberinto)
  (cond
@@ -127,10 +218,10 @@
 )
 
 (defun movimiento (actual direccion laberinto)
-  (cond ((eq direccion 0) (cond ((seguro laberinto (- actual 1)) (pintarjuego laberinto actual (- actual 1)) (- actual 1)) (t actual)))
-        ((eq direccion 1) (cond ((seguro laberinto (+ actual 1)) (pintarjuego laberinto actual (+ actual 1)) (+ actual 1)) (t actual)))
-        ((eq direccion 2) (cond ((seguro laberinto (- actual 25)) (pintarjuego laberinto actual (- actual 25)) (- actual 25)) (t actual)))
-        ((eq direccion 3) (cond ((seguro laberinto (+ actual 25)) (pintarjuego laberinto actual (+ actual 25)) (+ actual 25)) (t actual)))))
+  (cond ((eq direccion 0) (cond ((seguro laberinto (- actual 1)) (pintarjuego laberinto actual (- actual 1)) (setq movimientos (+ movimientos 1))(- actual 1)) (t actual)))
+        ((eq direccion 1) (cond ((seguro laberinto (+ actual 1)) (pintarjuego laberinto actual (+ actual 1)) (setq movimientos (+ movimientos 1))(+ actual 1)) (t actual)))
+        ((eq direccion 2) (cond ((seguro laberinto (- actual 25)) (pintarjuego laberinto actual (- actual 25)) (setq movimientos (+ movimientos 1))(- actual 25)) (t actual)))
+        ((eq direccion 3) (cond ((seguro laberinto (+ actual 25)) (pintarjuego laberinto actual (+ actual 25)) (setq movimientos (+ movimientos 1))(+ actual 25)) (t actual)))))
 
 (defun pintarjuego (laberinto anterior nueva)
 (setq i (dividir nueva 25))
@@ -168,19 +259,27 @@
  contingut))
  
 (defun llegeix-intern (fp)
- (let ((c (read-char fp nil nil)))
- (cond ((null c) '())
- (t (cons c (llegeix-intern fp))))))
+(let ((c (read-char fp nil nil)))
+(cond ((null c) (pintar laberinto 25 25) (princ "ESC. MENU\n") (jugar laberinto (encontrarentrada laberinto) (encontrarsalida laberinto) (encontrarentrada laberinto)))
+      (t (cond ((char= c #\#) (setf laberinto (append laberinto '(pared))) (llegeix-intern fp))
+               ((char= c #\.) (setf laberinto (append laberinto '(cami))) (llegeix-intern fp))
+               ((char= c #\e) (setf laberinto (append laberinto '(entrada))) (llegeix-intern fp))
+               ((char= c #\s) (setf laberinto (append laberinto '(sortida))) (llegeix-intern fp))
+               ((char= c #\newline) (llegeix-intern fp)))))))
 
 (defun menu ()
   (cls)
+  (setf laberinto nil)
+  (setq movimientos 0)
   (princ "1. JUGAR\n")
-  (princ "2. SALIR\n")
+  (princ "2. CARGAR\n")
+  (princ "3. SALIR\n")
   (move 150 100)
   (let ((opcion (get-key)))
     (cond
       ((= opcion 49) (dibuja-bloque 25 25))
-      ((= opcion 50) (exit))
+      ((= opcion 50) (llegeix nombre))
+      ((= opcion 51) (exit))
       (t (menu)))))
 
 (menu)
